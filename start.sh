@@ -4,4 +4,4 @@
 python backend/main.py &
 
 # Start Streamlit on port 7860
-streamlit run frontend/app.py --server.port 7860 --server.address 0.0.0.0
+streamlit run frontend/app.py --server.port 7860 --server.address 0.0.0.0 --server.enableCORS false --server.enableXsrfProtection false
