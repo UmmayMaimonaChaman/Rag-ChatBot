@@ -169,4 +169,5 @@ if prompt := st.chat_input("Ask a question about your documents..."):
 
 # Footer
 st.markdown("---")
-st.caption("Powered by HuggingFace, FAISS and Tesseract OCR. Bilingual Bengali-English Support.")
+st.markdown('<div style="text-align: center; color: #a0a0a0; font-size: 0.9rem;">A simple chatbot made by Ummay Maimona Chaman as a first learning outcome of RAG</div>', unsafe_allow_html=True)
+st.markdown('<div style="text-align: center; color: #707070; font-size: 0.8rem; margin-top: 0.5rem;">© All Rights Reserved to Ummay Maimona Chaman</div>', unsafe_allow_html=True)
