@@ -104,7 +104,7 @@ def clear_data():
 
 # --- UI Layout ---
 st.markdown('<div class="main-header">🤖 Multilingual RAG Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Bilingual (Bengali-English) Document Intelligence System</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Multilingual (Bengali-Banglish-English) Document Intelligence System</div>', unsafe_allow_html=True)
 
 # Backend Status Check
 if not check_backend():
