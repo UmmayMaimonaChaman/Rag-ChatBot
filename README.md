@@ -1,3 +1,12 @@
+---
+title: Multilingual RAG Chatbot
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # 🤖 Multilingual RAG Chatbot: Document Intelligence System
 
 [![Python](https://img.shields.io/badge/Python-3.10-blue?logo=python&logoColor=white)](https://www.python.org/)
