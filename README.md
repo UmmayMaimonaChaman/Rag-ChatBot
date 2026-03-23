@@ -11,7 +11,7 @@
 Live demo : [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces/Chaman5204/rag-chatbot)
 
 
-An advanced **Multilingual (Bengali/Banglish & English)** Document Intelligence Assistant that leverages Retrieval-Augmented Generation (RAG) to provide contextual answers from uploaded PDFs and images.
+An advanced **Multilingual (Bengali, Banglish & English)** Document Intelligence Assistant that leverages Retrieval-Augmented Generation (RAG) to provide contextual answers from uploaded PDFs and images.
 
 ---
 
@@ -20,7 +20,7 @@ An advanced **Multilingual (Bengali/Banglish & English)** Document Intelligence 
 This project develops a complete RAG pipeline designed for bilingual document understanding. It extracts text from complex documents (including images and PDFs) using OCR and indexed them using FAISS. Users can interact with their documents in natural language, receiving precise, context-aware responses in both English and Bengali.
 
 ### 🎯 Key Features
-- **🌍 Bilingual Support**: Seamlessly handles Bengali/Banglish and English documents and queries.
+- **🌍 Multilingual Support**: Seamlessly handles **Bengali**, **Banglish** (Latin-script Bengali), and **English** documents and queries.
 - **📄 Multimodal Extraction**: Utilizes Tesseract OCR for high-quality text extraction from images and PDFs.
 - **⚡ High-Performance Indexing**: Powered by FAISS for rapid semantic search.
 - **🧠 Local LLM Integration**: Uses state-of-the-art transformer models (`microsoft/phi-2`) for response generation.
