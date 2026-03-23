@@ -1,12 +1,3 @@
----
-title: Multilingual RAG Chatbot
-emoji: 🤖
-colorFrom: blue
-colorTo: green
-sdk: docker
-pinned: false
----
-
 # 🤖 Multilingual RAG Chatbot: Document Intelligence System
 
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces/Chaman5204/rag-chatbot)
