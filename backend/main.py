@@ -26,9 +26,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize RAG Pipeline (Lazy loading later if needed)
-# For now, initialize on startup
+# Initialize RAG Pipeline
 rag = None
+
+@app.get("/")
+async def root():
+    return {"status": "online"}
 
 @app.on_event("startup")
 async def startup_event():

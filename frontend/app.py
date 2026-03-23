@@ -69,26 +69,34 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- Backend API URL ---
-API_URL = "http://localhost:8000"
+API_URL = "http://127.0.0.1:8000"
+
+def check_backend():
+    try:
+        # Check if the root or a health endpoint works
+        requests.get(API_URL, timeout=1)
+        return True
+    except:
+        return False
 
 def upload_file(file):
     files = {"file": file}
     try:
-        response = requests.post(f"{API_URL}/upload", files=files)
+        response = requests.post(f"{API_URL}/upload", files=files, timeout=60)
         return response.json()
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": f"Backend unreachable (might still be loading models). Original error: {str(e)}"}
 
 def ask_query(query):
     try:
-        response = requests.post(f"{API_URL}/query", json={"query": query})
+        response = requests.post(f"{API_URL}/query", json={"query": query}, timeout=90)
         return response.json()
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": f"Backend connection error. Original error: {str(e)}"}
 
 def clear_data():
     try:
-        requests.post(f"{API_URL}/clear")
+        requests.post(f"{API_URL}/clear", timeout=5)
         st.session_state.messages = []
         return True
     except:
@@ -98,6 +106,10 @@ def clear_data():
 st.markdown('<div class="main-header">🤖 Multilingual RAG Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">Bilingual (Bengali-English) Document Intelligence System</div>', unsafe_allow_html=True)
 
+# Backend Status Check
+if not check_backend():
+    st.warning("⚠️ **AI Engine is still starting up...** (This can take 1-2 minutes on first load while models are being cached).")
+
 # Sidebar for controls
 with st.sidebar:
     st.image("https://img.icons8.com/fluency/96/bot.png", width=80)
@@ -106,12 +118,15 @@ with st.sidebar:
     
     if uploaded_file:
         if st.button("🚀 Process Document"):
-            with st.spinner("Extracting text and building index..."):
-                res = upload_file(uploaded_file)
-                if "error" in res:
-                    st.error(f"Upload failed: {res['error']}")
-                else:
-                    st.success(res["message"])
+            if not check_backend():
+                st.error("Wait! The AI Engine is still loading. Please try again in a few seconds.")
+            else:
+                with st.spinner("Extracting text and building index..."):
+                    res = upload_file(uploaded_file)
+                    if "error" in res:
+                        st.error(f"{res['error']}")
+                    else:
+                        st.success(res["message"])
     
     st.divider()
     if st.button("🗑️ Clear All History"):
@@ -137,8 +152,13 @@ if prompt := st.chat_input("Ask a question about your documents..."):
 
     # Generate response
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            res = ask_query(prompt)
+        if not check_backend():
+            response = "⚠️ The AI Engine is still starting up. Please wait a moment and try again."
+            st.markdown(response)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+        else:
+            with st.spinner("Thinking..."):
+                res = ask_query(prompt)
             if "error" in res:
                 response = f"⚠️ API Error: {res['error']}. Make sure the backend is running."
             else:
