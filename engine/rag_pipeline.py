@@ -9,7 +9,7 @@ load_dotenv()
 
 class RAGPipeline:
     def __init__(self, 
-                 llm_model_name="HuggingFaceH4/zephyr-7b-beta", 
+                 llm_model_name="google/gemma-2-2b-it", 
                  embedding_model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
                  tesseract_path=None):
         
