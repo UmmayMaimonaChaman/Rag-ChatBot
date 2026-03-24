@@ -15,7 +15,7 @@ class RAGPipeline:
         
         # Load model name from environment if not provided
         if llm_model_name is None:
-            llm_model_name = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
+            llm_model_name = os.getenv("MODEL_NAME", "microsoft/Phi-3-mini-4k-instruct")
         
         self.ocr = OCRProcessor(tesseract_path)
         self.vector_store = VectorStore(model_name=embedding_model_name)
