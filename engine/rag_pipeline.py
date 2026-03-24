@@ -55,37 +55,29 @@ class RAGPipeline:
         
         context = "\n\n".join(context_chunks)
         
-        # Zephyr/Mistral Prompt Template
-        prompt = f"""<|system|>
-You are a helpful assistant. Answer the question using the context below. 
-If the question is in Bengali or Banglish, answer in the same script/style.
-Context:
-{context}</s>
-<|user|>
-{query}</s>
-<|assistant|>
-"""
+        # Standard Chat Message Format for chat_completion
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant. Answer the question strictly using the provided context. Respond in the same language/script as the user."},
+            {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {query}"}
+        ]
         
         try:
-            # Enhanced generation parameters
-            response = self.client.text_generation(
-                prompt,
-                max_new_tokens=512,
+            # Use chat_completion (the 'conversational' task)
+            response = self.client.chat_completion(
+                messages,
+                max_tokens=512,
                 temperature=0.3, # Low for precision
-                top_p=0.9,
-                repetition_penalty=1.1,
-                stop_sequences=["</s>", "<|user|>", "<|system|>"]
+                top_p=0.9
             )
             
-            clean_answer = response.strip()
+            clean_answer = response.choices[0].message.content.strip()
+            
             if not clean_answer:
-                return "I'm sorry, I couldn't generate a clear answer from the document context. Please try rephrasing or check the 'View Sources' section.", context_chunks
+                return "I'm sorry, I couldn't generate a clear answer. Please try rephrasing.", context_chunks
             
             return clean_answer, context_chunks
         except Exception as e:
-            # Capture more error details
+            # Detailed diagnostics
             import traceback
-            full_error = traceback.format_exc()
-            print(f"GENERATION ERROR:\n{full_error}")
-            error_msg = str(e) if str(e) else "Unknown API Error (Possibly rate limit or model timeout)"
-            return f"Generation Error: {error_msg}. (Model: HuggingFaceH4/zephyr-7b-beta)", context_chunks
+            print(f"CHAT ERROR:\n{traceback.format_exc()}")
+            return f"Generation Error: {str(e)}", context_chunks
