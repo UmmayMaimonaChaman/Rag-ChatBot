@@ -9,7 +9,7 @@ load_dotenv()
 
 class RAGPipeline:
     def __init__(self, 
-                 llm_model_name="google/gemma-2-2b-it", 
+                 llm_model_name="HuggingFaceH4/zephyr-7b-beta", 
                  embedding_model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
                  tesseract_path=None):
         
@@ -18,6 +18,11 @@ class RAGPipeline:
         
         # Initialize Inference Client
         self.hf_token = os.getenv("HF_TOKEN")
+        if not self.hf_token:
+            print("CRITICAL: HF_TOKEN not found in environment!")
+        else:
+            print(f"HF_TOKEN detected (starts with: {self.hf_token[:4]}...)")
+            
         print(f"Initializing Inference API for model: {llm_model_name}...")
         self.client = InferenceClient(model=llm_model_name, token=self.hf_token)
         print("RAG Pipeline initialized (API mode).")
@@ -50,38 +55,37 @@ class RAGPipeline:
         
         context = "\n\n".join(context_chunks)
         
-        # Gemma-2 Chat Template
-        prompt = f"""<start_of_turn>user
-Use the provided context to answer the question. 
-Respond in the same language/script as the question (Bengali, Banglish, or English).
-
+        # Zephyr/Mistral Prompt Template
+        prompt = f"""<|system|>
+You are a helpful assistant. Answer the question using the context below. 
+If the question is in Bengali or Banglish, answer in the same script/style.
 Context:
-{context}
-
-Question: {query}<end_of_turn>
-<start_of_turn>model
-Answer:"""
+{context}</s>
+<|user|>
+{query}</s>
+<|assistant|>
+"""
         
         try:
             # Enhanced generation parameters
             response = self.client.text_generation(
                 prompt,
                 max_new_tokens=512,
-                temperature=0.4,
+                temperature=0.3, # Low for precision
                 top_p=0.9,
                 repetition_penalty=1.1,
-                stop_sequences=["<end_of_turn>", "User:", "Question:"]
+                stop_sequences=["</s>", "<|user|>", "<|system|>"]
             )
             
             clean_answer = response.strip()
             if not clean_answer:
                 return "I'm sorry, I couldn't generate a clear answer from the document context. Please try rephrasing or check the 'View Sources' section.", context_chunks
             
-            # Remove any trailing "Answer:" prefixes if the model repeats them
-            if clean_answer.startswith("Answer:"):
-                clean_answer = clean_answer.replace("Answer:", "", 1).strip()
-                
             return clean_answer, context_chunks
         except Exception as e:
-            error_msg = str(e) if str(e) else "Unknown API Error"
-            return f"Generation Error: {error_msg}. (Make sure your HF_TOKEN is correctly set in Settings > Secrets)", context_chunks
+            # Capture more error details
+            import traceback
+            full_error = traceback.format_exc()
+            print(f"GENERATION ERROR:\n{full_error}")
+            error_msg = str(e) if str(e) else "Unknown API Error (Possibly rate limit or model timeout)"
+            return f"Generation Error: {error_msg}. (Model: HuggingFaceH4/zephyr-7b-beta)", context_chunks
