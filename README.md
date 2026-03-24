@@ -98,3 +98,4 @@ Developed by **Ummay Maimona Chaman**
 ---
 > [!IMPORTANT]
 > This project is for educational purposes. All contributions are welcome!
+> i am now handling some errors.
