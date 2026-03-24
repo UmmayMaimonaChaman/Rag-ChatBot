@@ -36,8 +36,8 @@ async def root():
 @app.on_event("startup")
 async def startup_event():
     global rag
-    # Note: Using a smaller model for better PC compatibility by default
-    rag = RAGPipeline(llm_model_name="microsoft/phi-2")
+    # Using high-performance Inference API models
+    rag = RAGPipeline()
 
 class QueryRequest(BaseModel):
     query: str

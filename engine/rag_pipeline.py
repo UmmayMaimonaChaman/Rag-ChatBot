@@ -1,37 +1,26 @@
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
-import torch
+from huggingface_hub import InferenceClient
 from engine.ocr import OCRProcessor
 from engine.vector_store import VectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class RAGPipeline:
     def __init__(self, 
-                 llm_model_name="microsoft/phi-2", 
+                 llm_model_name="mistralai/Mistral-7B-Instruct-v0.2", 
                  embedding_model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
                  tesseract_path=None):
         
         self.ocr = OCRProcessor(tesseract_path)
         self.vector_store = VectorStore(model_name=embedding_model_name)
         
-        # Initialize LLM
-        print(f"Loading LLM: {llm_model_name}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(llm_model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            llm_model_name, 
-            torch_dtype=torch.float32, 
-            device_map="auto",
-            trust_remote_code=True
-        )
-        self.generator = pipeline(
-            "text-generation", 
-            model=self.model, 
-            tokenizer=self.tokenizer,
-            max_new_tokens=256,
-            temperature=0.7,
-            top_p=0.9
-        )
-        print("LLM Loaded successfully.")
+        # Initialize Inference Client
+        self.hf_token = os.getenv("HF_TOKEN")
+        print(f"Initializing Inference API for model: {llm_model_name}...")
+        self.client = InferenceClient(model=llm_model_name, token=self.hf_token)
+        print("RAG Pipeline initialized (API mode).")
 
     def process_document(self, content_bytes, filename):
         """Extract text, chunk it, and add to vector store."""
@@ -83,7 +72,15 @@ class RAGPipeline:
         
         Answer:"""
         
-        response = self.generator(prompt)
-        # Extract response after the prompt
-        answer = response[0]['generated_text'].split("Answer:")[-1].strip()
-        return answer
+        try:
+            # Use InferenceClient for generation
+            response = self.client.text_generation(
+                prompt,
+                max_new_tokens=512,
+                temperature=0.7,
+                top_p=0.9,
+                stop_sequences=["Question:", "\n\n"]
+            )
+            return response.strip()
+        except Exception as e:
+            return f"Error during generation: {str(e)}"

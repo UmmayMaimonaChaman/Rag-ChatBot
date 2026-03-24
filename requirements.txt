@@ -1,22 +1,25 @@
+# Core
 fastapi
 uvicorn[standard]
 streamlit
-transformers
-sentence-transformers
+huggingface_hub
+python-dotenv
+python-multipart
+pydantic
+pydantic-settings
+
+# RAG & OCR
 faiss-cpu
 pytesseract
 pdf2image
-python-multipart
-pydantic
 langchain
 langchain-community
 langchain-text-splitters
-torch
-accelerate
-pydantic-settings
-python-dotenv
+sentence-transformers
 pillow
+numpy
+
+# Utilities
 typing-extensions
 asyncio
 aiofiles
-numpy
