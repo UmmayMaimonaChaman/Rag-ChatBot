@@ -74,14 +74,14 @@ API_URL = "http://127.0.0.1:8000"
 def upload_file(file):
     files = {"file": file}
     try:
-        response = requests.post(f"{API_URL}/upload", files=files, timeout=60)
+        response = requests.post(f"{API_URL}/upload", files=files, timeout=300)
         return response.json()
     except Exception as e:
         return {"error": f"Upload failed. API error: {str(e)}"}
 
 def ask_query(query):
     try:
-        response = requests.post(f"{API_URL}/query", json={"query": query}, timeout=90)
+        response = requests.post(f"{API_URL}/query", json={"query": query}, timeout=300)
         return response.json()
     except Exception as e:
         return {"error": f"Query failed. API error: {str(e)}"}

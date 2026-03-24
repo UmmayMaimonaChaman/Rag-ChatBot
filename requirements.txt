@@ -12,6 +12,7 @@ pydantic-settings
 faiss-cpu
 pytesseract
 pdf2image
+pypdf
 langchain
 langchain-community
 langchain-text-splitters

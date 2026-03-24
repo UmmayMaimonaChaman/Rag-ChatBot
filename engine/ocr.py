@@ -19,9 +19,23 @@ class OCRProcessor:
             return f"Error during Image OCR: {str(e)}"
 
     def extract_text_from_pdf(self, pdf_path, lang='eng+ben'):
-        """Extract text from a PDF file using OCR."""
+        """Extract text from a PDF file using pypdf (direct) with OCR fallback."""
         try:
-            # Convert PDF pages to images
+            import pypdf
+            reader = pypdf.PdfReader(pdf_path)
+            direct_text = ""
+            for page in reader.pages:
+                text = page.extract_text()
+                if text:
+                    direct_text += text + "\n\n"
+            
+            # If direct extraction found significant text, return it
+            if len(direct_text.strip()) > 50:
+                print(f"INFO: Successfully extracted {len(direct_text)} chars directly from PDF.")
+                return direct_text.strip()
+            
+            print("INFO: Direct extraction failed or too short. Falling back to OCR...")
+            # Convert PDF pages to images for OCR
             images = pdf2image.convert_from_path(pdf_path)
             full_text = []
             for i, image in enumerate(images):
@@ -29,7 +43,7 @@ class OCRProcessor:
                 full_text.append(text.strip())
             return "\n\n".join(full_text)
         except Exception as e:
-            return f"Error during PDF OCR: {str(e)}"
+            return f"Error during PDF processing: {str(e)}"
 
     def extract_text_from_bytes(self, content_bytes, filename, lang='eng+ben'):
         """Extract text from file bytes (PDF or Image)."""
