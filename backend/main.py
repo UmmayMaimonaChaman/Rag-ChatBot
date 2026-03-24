@@ -44,6 +44,7 @@ class QueryRequest(BaseModel):
 
 class QueryResponse(BaseModel):
     answer: str
+    chunks: List[str]
     status: str
 
 @app.post("/upload")
@@ -58,8 +59,8 @@ async def upload_document(file: UploadFile = File(...)):
 @app.post("/query", response_model=QueryResponse)
 async def query_document(request: QueryRequest):
     try:
-        answer = rag.answer_query(request.query)
-        return QueryResponse(answer=answer, status="success")
+        answer, chunks = rag.answer_query(request.query)
+        return QueryResponse(answer=answer, chunks=chunks, status="success")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -100,7 +100,7 @@ col1, col2 = st.columns([0.1, 0.9])
 with col1:
     st.image("https://img.icons8.com/fluency/96/bot.png", width=60)
 with col2:
-    st.markdown('<div style="font-size: 2.2rem; font-weight: 800; color: #ffffff; margin-bottom: 0;">RAG ChatBot <span style="font-size: 1rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 4px 8px; border-radius: 6px; position: relative; top: -10px;">PRO</span></div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size: 2.2rem; font-weight: 800; color: #ffffff; margin-bottom: 0;">RAG ChatBot</div>', unsafe_allow_html=True)
     st.markdown('<div style="color: #94a3b8; font-size: 1rem; margin-top: -10px;">Multilingual (Bengali-Banglish-English) Document Intelligence System</div>', unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -142,7 +142,11 @@ chat_container = st.container()
 with chat_container:
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(f'<div class="chat-text">{message["content"]}</div>', unsafe_allow_html=True)
+            st.markdown(message["content"])
+            if message["role"] == "assistant" and "chunks" in message:
+                with st.expander("📚 View Sources"):
+                    for i, chunk in enumerate(message["chunks"]):
+                        st.markdown(f"**Chunk {i+1}:**\n{chunk}")
 
 # User input
 if prompt := st.chat_input("Ask a question about your documents..."):
@@ -157,11 +161,22 @@ if prompt := st.chat_input("Ask a question about your documents..."):
             res = ask_query(prompt)
             if "error" in res:
                 response = f"⚠️ Error: {res['error']}"
+                chunks = []
             else:
                 response = res.get("answer", "No answer received.")
+                chunks = res.get("chunks", [])
             
             st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            if chunks:
+                with st.expander("📚 View Sources"):
+                    for i, chunk in enumerate(chunks):
+                        st.markdown(f"**Chunk {i+1}:**\n{chunk}")
+                        
+            st.session_state.messages.append({
+                "role": "assistant", 
+                "content": response,
+                "chunks": chunks
+            })
 
 # Footer
 st.markdown("<br><br>", unsafe_allow_html=True)

@@ -9,7 +9,7 @@ load_dotenv()
 
 class RAGPipeline:
     def __init__(self, 
-                 llm_model_name="mistralai/Mistral-7B-Instruct-v0.2", 
+                 llm_model_name="google/gemma-2-2b-it", 
                  embedding_model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
                  tesseract_path=None):
         
@@ -46,24 +46,12 @@ class RAGPipeline:
         """Retrieve context and generate answer."""
         context_chunks = self.vector_store.search(query, top_k=3)
         if not context_chunks:
-            return "No relevant context found in the uploaded documents."
+            return "No relevant context found in the uploaded documents.", []
         
         context = "\n\n".join(context_chunks)
         
         prompt = f"""
         You are a Document Intelligence Assistant. Use the provided context to answer the user's question.
-        
-        SUPPORTED LANGUAGES:
-        - English
-        - Bengali (বাংলা)
-        - Banglish (Bengali language written using the Latin/English alphabet, e.g., "Kemon acho?")
-        
-        CORE INSTRUCTIONS:
-        1. Process Banglish (Latin-script Bengali) queries as Bengali.
-        2. Respond in the same language and script as the user's question.
-        3. If the user asks in Banglish, reply in Banglish. 
-        4. If the context is missing info, state: "Context er moddhe ei file er kono tottho nai" (for Banglish/Bengali queries).
-        5. Stay strictly within the provided context.
         
         Context:
         {context}
@@ -79,8 +67,8 @@ class RAGPipeline:
                 max_new_tokens=512,
                 temperature=0.7,
                 top_p=0.9,
-                stop_sequences=["Question:", "\n\n"]
+                stop_sequences=["Question:", "Context:"]
             )
-            return response.strip()
+            return response.strip(), context_chunks
         except Exception as e:
-            return f"Error during generation: {str(e)}"
+            return f"Error during generation: {str(e)}", context_chunks
