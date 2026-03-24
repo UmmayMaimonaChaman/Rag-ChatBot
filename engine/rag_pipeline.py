@@ -9,9 +9,13 @@ load_dotenv()
 
 class RAGPipeline:
     def __init__(self, 
-                 llm_model_name="HuggingFaceTB/SmolLM2-1.7B-Instruct", 
+                 llm_model_name=None, 
                  embedding_model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
                  tesseract_path=None):
+        
+        # Load model name from environment if not provided
+        if llm_model_name is None:
+            llm_model_name = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
         
         self.ocr = OCRProcessor(tesseract_path)
         self.vector_store = VectorStore(model_name=embedding_model_name)
