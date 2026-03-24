@@ -46,29 +46,42 @@ class RAGPipeline:
         """Retrieve context and generate answer."""
         context_chunks = self.vector_store.search(query, top_k=3)
         if not context_chunks:
-            return "No relevant context found in the uploaded documents.", []
+            return "Context er moddhe ei file er kono tottho nai (No relevant context found).", []
         
         context = "\n\n".join(context_chunks)
         
-        prompt = f"""
-        You are a Document Intelligence Assistant. Use the provided context to answer the user's question.
-        
-        Context:
-        {context}
-        
-        Question: {query}
-        
-        Answer:"""
+        # Gemma-2 Chat Template
+        prompt = f"""<start_of_turn>user
+Use the provided context to answer the question. 
+Respond in the same language/script as the question (Bengali, Banglish, or English).
+
+Context:
+{context}
+
+Question: {query}<end_of_turn>
+<start_of_turn>model
+Answer:"""
         
         try:
-            # Use InferenceClient for generation
+            # Enhanced generation parameters
             response = self.client.text_generation(
                 prompt,
                 max_new_tokens=512,
-                temperature=0.7,
+                temperature=0.4,
                 top_p=0.9,
-                stop_sequences=["Question:", "Context:"]
+                repetition_penalty=1.1,
+                stop_sequences=["<end_of_turn>", "User:", "Question:"]
             )
-            return response.strip(), context_chunks
+            
+            clean_answer = response.strip()
+            if not clean_answer:
+                return "I'm sorry, I couldn't generate a clear answer from the document context. Please try rephrasing or check the 'View Sources' section.", context_chunks
+            
+            # Remove any trailing "Answer:" prefixes if the model repeats them
+            if clean_answer.startswith("Answer:"):
+                clean_answer = clean_answer.replace("Answer:", "", 1).strip()
+                
+            return clean_answer, context_chunks
         except Exception as e:
-            return f"Error during generation: {str(e)}", context_chunks
+            error_msg = str(e) if str(e) else "Unknown API Error"
+            return f"Generation Error: {error_msg}. (Make sure your HF_TOKEN is correctly set in Settings > Secrets)", context_chunks
