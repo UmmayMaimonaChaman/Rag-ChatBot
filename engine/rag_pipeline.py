@@ -9,7 +9,7 @@ load_dotenv()
 
 class RAGPipeline:
     def __init__(self, 
-                 llm_model_name="microsoft/Phi-3-mini-4k-instruct", 
+                 llm_model_name="HuggingFaceTB/SmolLM2-1.7B-Instruct", 
                  embedding_model_name='sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
                  tesseract_path=None):
         
@@ -17,15 +17,18 @@ class RAGPipeline:
         self.vector_store = VectorStore(model_name=embedding_model_name)
         
         # Initialize Inference Client
+        # On HF Spaces, if HF_TOKEN secret is set, it's available as an env var.
         self.hf_token = os.getenv("HF_TOKEN")
+        
         if not self.hf_token:
-            print("CRITICAL: HF_TOKEN not found in environment!")
+            print("WARNING: HF_TOKEN not found in environment. Using default Space permissions.")
         else:
-            print(f"HF_TOKEN detected (starts with: {self.hf_token[:4]}...)")
+            print(f"INFO: HF_TOKEN detected (starts with: {self.hf_token[:4]}...)")
             
-        print(f"Initializing Inference API for model: {llm_model_name}...")
+        print(f"Initializing Inference API for natively-hosted model: {llm_model_name}...")
+        # We don't specify the token if it's not found, as the Space might have a scoped token already.
         self.client = InferenceClient(model=llm_model_name, token=self.hf_token)
-        print("RAG Pipeline initialized (API mode).")
+        print("RAG Pipeline initialized (Native API mode).")
 
     def process_document(self, content_bytes, filename):
         """Extract text, chunk it, and add to vector store."""
