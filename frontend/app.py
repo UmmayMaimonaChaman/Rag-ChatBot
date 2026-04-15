@@ -71,20 +71,38 @@ st.markdown(f"""
 # --- Backend API URL ---
 API_URL = "http://127.0.0.1:8000"
 
+def get_system_status():
+    """Check if the backend is online and ready."""
+    try:
+        response = requests.get(f"{API_URL}/health", timeout=2)
+        if response.status_code == 200:
+            return response.json().get("status", "unknown")
+        return "down"
+    except:
+        return "down"
+
 def upload_file(file):
     files = {"file": file}
     try:
-        response = requests.post(f"{API_URL}/upload", files=files, timeout=300)
-        return response.json()
+        response = requests.post(f"{API_URL}/upload", files=files, timeout=600)
+        res_json = response.json()
+        if response.status_code != 200 or "error" in res_json:
+            error_msg = res_json.get("error") or res_json.get("detail") or "Unknown server error"
+            return {"error": error_msg}
+        return res_json
     except Exception as e:
-        return {"error": f"Upload failed. API error: {str(e)}"}
+        return {"error": f"Connection failed. The system might still be starting up. (Error: {str(e)})"}
 
 def ask_query(query):
     try:
         response = requests.post(f"{API_URL}/query", json={"query": query}, timeout=300)
-        return response.json()
+        res_json = response.json()
+        if response.status_code != 200 or "error" in res_json:
+            error_msg = res_json.get("error") or res_json.get("detail") or "Generation failed"
+            return {"error": error_msg}
+        return res_json
     except Exception as e:
-        return {"error": f"Query failed. API error: {str(e)}"}
+        return {"error": f"Query failed. API connection error: {str(e)}"}
 
 def clear_data():
     try:
@@ -109,20 +127,32 @@ st.markdown("<br>", unsafe_allow_html=True)
 with st.sidebar:
     st.markdown('<div style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin-bottom: 1rem;">Control Center</div>', unsafe_allow_html=True)
     
+    # Status Indicator
+    status = get_system_status()
+    if status == "ready":
+        st.success("🟢 System Online & Ready")
+    elif status == "loading":
+        st.warning("🟡 System Initializing (Downloading Models...)")
+        st.info("This can take 2-5 minutes on the first run.")
+    else:
+        st.error("🔴 System Offline (Backend Starting...)")
+        if st.button("🔄 Refresh Status"):
+            st.rerun()
+
     st.markdown("### 📄 Document Upload")
     uploaded_file = st.file_uploader("", type=["pdf", "png", "jpg", "jpeg"], help="Upload PDF or Image for analysis")
     
     if uploaded_file:
-        if st.button("🚀 Process Document", use_container_width=True):
-            with st.status("Processing document...", expanded=True) as status:
-                st.write("Extracting content via OCR...")
+        if st.button("🚀 Process Document", use_container_width=True, disabled=(status != "ready")):
+            with st.status("Processing document...", expanded=True) as status_box:
+                st.write("Extracting content and generating embeddings...")
                 res = upload_file(uploaded_file)
                 if "error" in res:
                     st.error(f"{res['error']}")
-                    status.update(label="Process failed!", state="error")
+                    status_box.update(label="Process failed!", state="error")
                 else:
                     st.success("Document analyzed and indexed!")
-                    status.update(label="Document ready!", state="complete")
+                    status_box.update(label="Document ready!", state="complete")
                     st.balloons()
     
     st.divider()
